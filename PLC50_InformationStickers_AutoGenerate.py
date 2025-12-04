@@ -141,7 +141,7 @@ def main() -> None:
             "sync locally or ensure Office is authenticated. " + str(e)
         )
 
-    ws = wb.Sheets("Info_Tags_PLC40_FC08_103")
+    ws = wb.Sheets("Info_Tags_PLC50_FC08_131")
 
     # Attach to PowerPoint and open presentation
     ppt = attach_office("PowerPoint")
