@@ -40,7 +40,7 @@ except Exception:
 # ----------------------------------------------------------------------------- #
 
 excel_file_path: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC40\03. LOTO Information Sticker\PLC40_LOTO_Information_103_Stickers_Template.pptx"
+ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC40\03. LOTO Information Sticker\PLC40_LOTO_Information_103_Stickers_Template_Italian.pptx"
 
 stickers_per_slide: int = 6
 total_stickers: int = 103
