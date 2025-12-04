@@ -40,10 +40,10 @@ except Exception:
 # ----------------------------------------------------------------------------- #
 
 excel_file_path: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC30\03_LOTO_Information_Sticker\PLC30_LOTO_Information_114_Stickers_Template.pptx"
+ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC30\03_LOTO_Information_Sticker\PLC30_LOTO_Information_83_Stickers_Template_Italian.pptx"
 
 stickers_per_slide: int = 6
-total_stickers: int = 120
+total_stickers: int = 83
 
 FORCE_COORDS: bool = False  # if True, apply computed left/top/width/height
 
