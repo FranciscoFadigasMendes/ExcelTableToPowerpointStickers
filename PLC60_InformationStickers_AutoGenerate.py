@@ -40,10 +40,10 @@ except Exception:
 # ----------------------------------------------------------------------------- #
 
 excel_file_path: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC60\03. LOTO Information Sticker\PLC60_LOTO_Information_131_Stickers_Template_Italian.pptx"
+ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC60\03. LOTO Information Sticker\PLC60_LOTO_Information_154_Stickers_Template_Italian.pptx"
 
 stickers_per_slide: int = 6
-total_stickers: int = xxx
+total_stickers: int = 154
 
 FORCE_COORDS: bool = False  # if True, apply computed left/top/width/height
 
@@ -141,7 +141,7 @@ def main() -> None:
             "sync locally or ensure Office is authenticated. " + str(e)
         )
 
-    ws = wb.Sheets("Info_Tags_PLC60_FC08_131")
+    ws = wb.Sheets("Info_Tags_PLC60_FC08_154")
 
     # Attach to PowerPoint and open presentation
     ppt = attach_office("PowerPoint")
