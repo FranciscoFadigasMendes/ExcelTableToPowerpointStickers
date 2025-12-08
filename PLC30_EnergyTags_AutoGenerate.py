@@ -38,13 +38,13 @@ except Exception:
 # ----------------------------------------------------------------------------- #
 
 EXCEL_PATH: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-PPT_PATH: str = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_250_Template_Italian.pptx"
+PPT_PATH: str = r"C:\LOTO PLACARDS FC08\PLC30\02. Energy Point Tags\PLC30_LOTO_EnergyTags_86_Template_Italian.pptx"
 
-TOTAL_TAGS: int = 250
+TOTAL_TAGS: int = 86
 TAGS_PER_SLIDE: int = 10
 
-START_ROW: int = 2  # Excel Row C2 → Tag 1
-EXCEL_COL: str = "C"  # Source column for tag label
+START_ROW: int = 2  # Excel Row E2 → Tag 1
+EXCEL_COL: str = "E"  # Source column for tag label
 
 SHEET_NAME: str = "EnergyTags"
 
@@ -108,7 +108,7 @@ def center_text(shp):
 
 def main() -> None:
 
-    print("Starting PLC20 Energy Tag update...")
+    print("Starting PLC30 Energy Tag update...")
 
     # Attach Excel
     excel = attach_office("Excel")
@@ -163,7 +163,7 @@ def main() -> None:
 
         print(f"  🔹 Set {shape_name} → \"{new_text}\" {pos_print}")
 
-    print("DONE! 250 Energy Tags Updated Successfully!")
+    print("DONE! 86 Energy Tags Updated Successfully!")
 
 
 # ----------------------------------------------------------------------------- #
