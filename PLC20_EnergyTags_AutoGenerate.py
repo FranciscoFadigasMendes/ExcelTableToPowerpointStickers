@@ -1,72 +1,148 @@
-import win32com
-import win32com.client as win32
 import math
+import time
+from typing import Any, Tuple
 
-excel_file_path: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-ppt_file_url: str = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_250_Template_Italian.pptx"
+# ----------------------------------------------------------------------------- #
+# SAFE EXCEL ACCESS
+# ----------------------------------------------------------------------------- #
+
+def safe_cell(ws, row, col, retries=5, delay=0.25):
+    """Safely get a cell value from Excel with retry if COM call is rejected."""
+    for _ in range(retries):
+        try:
+            return ws.Cells(row, col).Value
+        except Exception as e:
+            if "Call was rejected by callee" in str(e):
+                time.sleep(delay)
+                continue
+            else:
+                raise
+    raise RuntimeError(f"Excel failed COM access: Cell({row},{col})")
+
+
+# ----------------------------------------------------------------------------- #
+# IMPORT WIN32 WITH GRACEFUL FAIL
+# ----------------------------------------------------------------------------- #
+
+try:
+    import win32com.client as win32  # type: ignore
+except Exception:
+    class _Win32Stub:
+        def __getattr__(self, _):
+            raise RuntimeError("pywin32 is required. Install: pip install pywin32")
+    win32 = _Win32Stub()
+
+
+# ----------------------------------------------------------------------------- #
+# CONFIGURATION
+# ----------------------------------------------------------------------------- #
+
+EXCEL_PATH: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
+PPT_PATH: str = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_250_Template_Italian.pptx"
+
+TOTAL_TAGS: int = 250
+TAGS_PER_SLIDE: int = 10
+
+START_ROW: int = 2  # Excel Row C2 → Tag 1
+EXCEL_COL: str = "C"  # Source column for tag label
+
+SHEET_NAME: str = "EnergyTags"
+
+
+# ----------------------------------------------------------------------------- #
+# HELPERS
+# ----------------------------------------------------------------------------- #
 
 def attach_office(app_name: str):
-    """Attach to a running COM application or start it using EnsureDispatch."""
+    """Attach to a running Office COM instance or launch one."""
     try:
-        return win32.GetActiveObject(f"{app_name}.Application")
+        app = win32.GetActiveObject(f"{app_name}.Application")
     except Exception:
-        try:
-            app = win32.gencache.EnsureDispatch(f"{app_name}.Application")
-            app.Visible = True
-            return app
-        except Exception as e:
-            raise RuntimeError(f"Failed to start/attach to {app_name}: {e}")
+        app = win32.gencache.EnsureDispatch(f"{app_name}.Application")
+    app.Visible = True
+    return app
 
-def update_energy_tags():
-    ppt_path = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_250_Template_Italian.pptx"
-    
-    win32com.client.gencache.Rebuild()
+def safe_shape(slide: Any, name: str):
+    try:
+        return slide.Shapes(name)
+    except Exception:
+        return None
 
-    # Attach to Excel
+def excel_col_letter_to_number(col: str) -> int:
+    """Convert Excel column letter to index (G→7, AA→27, etc.)."""
+    col = col.upper()
+    num = 0
+    for c in col:
+        num = num * 26 + (ord(c) - 64)
+    return num
+
+COL_INDEX = excel_col_letter_to_number(EXCEL_COL)
+
+
+# ----------------------------------------------------------------------------- #
+# MAIN PROCESS
+# ----------------------------------------------------------------------------- #
+
+def main() -> None:
+
+    print("Starting PLC20 Energy Tag update...")
+
+    # Attach Excel
     excel = attach_office("Excel")
 
-    # Open or get workbook
+    # Open workbook
     try:
-        if excel_file_path:
-            wb = excel.Workbooks.Open(excel_file_path)
-        else:
-            wb = excel.ActiveWorkbook
+        wb = excel.Workbooks.Open(EXCEL_PATH)
     except Exception as e:
         raise RuntimeError(
-            "Failed to open workbook. If it's on SharePoint/OneDrive, "
-            "sync locally or ensure Office is authenticated. " + str(e)
+            "Failed to open Excel file. Check path or OneDrive login.\n" + str(e)
         )
 
-    ws = wb.Sheets("Info_Tags_PLC20_FCO8_147")
+    ws = wb.Sheets(SHEET_NAME)
 
-    # Launch PowerPoint
+    # Attach PowerPoint
+    ppt = attach_office("PowerPoint")
     try:
-        ppt = win32.GetActiveObject("PowerPoint.Application")
-    except:
-        ppt = win32.Dispatch("PowerPoint.Application")
-    
-    ppt.Visible = True
-    presentation = ppt.Presentations.Open(ppt_path)
+        pres = ppt.Presentations.Open(PPT_PATH, WithWindow=True)
+    except Exception as e:
+        raise RuntimeError("Failed to open PPT file:\n" + str(e))
 
-    # Loop through 251 values
-    for i in range(1, 251):
-        shape_name = f"LOTO {i:02d}"
-        cell_value = sheet.Range(f"G{i+1}").Value
-        
-        slide_number = math.ceil(i / 10)  # 10 per slide
-        
-        if slide_number <= presentation.Slides.Count:
-            slide = presentation.Slides(slide_number)
+    # Iterate tags
+    for tag_index in range(1, TOTAL_TAGS + 1):
+        shape_name = f"LOTO {tag_index:02d}"
+        row = START_ROW + tag_index  # G2 = tag1 → row3
 
-            try:
-                shape = slide.Shapes(shape_name)
-                shape.TextFrame.TextRange.Text = str(cell_value)
-            except Exception as e:
-                print(f"Shape not found: {shape_name} on slide {slide_number}")
-        else:
-            print(f"Slide {slide_number} does not exist.")
+        slide_index = math.ceil(tag_index / TAGS_PER_SLIDE)
+        pos_print = f"[Tag {tag_index:03d} / Slide {slide_index}]"
 
-    print("250 Energy Point Stickers Updated!")
+        if slide_index > pres.Slides.Count:
+            print(f"⚠️ Slide {slide_index} missing — {pos_print}")
+            continue
+
+        slide = pres.Slides(slide_index)
+        shp = safe_shape(slide, shape_name)
+
+        if shp is None:
+            print(f"⚠️ Missing shape \"{shape_name}\" {pos_print}")
+            continue
+
+        val = safe_cell(ws, row, COL_INDEX)
+        new_text = "" if val in (None, "", "nan") else str(val).strip()
+
+        try:
+            if shp.TextFrame.Orientation not in (3, 4):  # Do not overwrite vertical text
+                shp.TextFrame.TextRange.Text = new_text
+        except Exception:
+            pass
+
+        print(f"  🔹 Set {shape_name} → \"{new_text}\" {pos_print}")
+
+    print("DONE! 250 Energy Tags Updated Successfully!")
+
+
+# ----------------------------------------------------------------------------- #
+# ENTRY POINT
+# ----------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
-    update_energy_tags()
+    main()
