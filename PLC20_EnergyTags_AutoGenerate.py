@@ -38,9 +38,9 @@ except Exception:
 # ----------------------------------------------------------------------------- #
 
 EXCEL_PATH: str = r"C:\LOTO PLACARDS FC08\LOTO Updating Tool FCO8.xlsm"
-PPT_PATH: str = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_250_Template_Italian.pptx"
+PPT_PATH: str = r"C:\LOTO PLACARDS FC08\PLC20\02. Energy Point Tags\PLC20_LOTO_EnergyTags_165_Template_Italian.pptx"
 
-TOTAL_TAGS: int = 250
+TOTAL_TAGS: int = 165
 TAGS_PER_SLIDE: int = 10
 
 START_ROW: int = 2  # Excel Row C2 → Tag 1
@@ -163,7 +163,7 @@ def main() -> None:
 
         print(f"  🔹 Set {shape_name} → \"{new_text}\" {pos_print}")
 
-    print("DONE! 250 Energy Tags Updated Successfully!")
+    print("DONE! 165 Energy Tags Updated Successfully!")
 
 
 # ----------------------------------------------------------------------------- #
