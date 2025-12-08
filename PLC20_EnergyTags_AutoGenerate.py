@@ -78,6 +78,29 @@ def excel_col_letter_to_number(col: str) -> int:
 
 COL_INDEX = excel_col_letter_to_number(EXCEL_COL)
 
+def set_font_size(shp, size_pt: int):
+    """Safely apply font size to a shape's text."""
+    try:
+        tf = shp.TextFrame
+        if tf is not None:
+            rng = tf.TextRange
+            if rng is not None and hasattr(rng, "Font"):
+                rng.Font.Size = size_pt
+    except Exception:
+        pass
+
+
+def center_text(shp):
+    """Center text horizontally and vertically in a shape."""
+    try:
+        tf = shp.TextFrame
+        if tf is not None:
+            tf.HorizontalAnchor = 2  # 0=left, 1=centered (deprecated?), 2=centered works reliably
+            tf.VerticalAnchor = 2    # 0=top, 1=center, 2=middle
+            tf.TextRange.ParagraphFormat.Alignment = 2  # 0=left, 1=center, 2=center
+    except Exception:
+        pass
+
 
 # ----------------------------------------------------------------------------- #
 # MAIN PROCESS
@@ -106,6 +129,7 @@ def main() -> None:
         pres = ppt.Presentations.Open(PPT_PATH, WithWindow=True)
     except Exception as e:
         raise RuntimeError("Failed to open PPT file:\n" + str(e))
+    
 
     # Iterate tags
     for tag_index in range(1, TOTAL_TAGS + 1):
@@ -130,8 +154,10 @@ def main() -> None:
         new_text = "" if val in (None, "", "nan") else str(val).strip()
 
         try:
-            if shp.TextFrame.Orientation not in (3, 4):  # Do not overwrite vertical text
+            if shp.TextFrame.Orientation not in (3, 4):  # skip rotated shapes
                 shp.TextFrame.TextRange.Text = new_text
+                set_font_size(shp, 20)  # apply font size here
+                center_text(shp)          # center text
         except Exception:
             pass
 
